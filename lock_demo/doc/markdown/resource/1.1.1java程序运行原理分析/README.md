@@ -1,6 +1,10 @@
+
 #JAVA程序运行原理分析
+
 ##class文件内容
+
 class文件包含java程序执行字节码，数据严格按照紧凑排列在class文件中的二进制流，中间没有任何分隔符；文件开头有一个0xcafebabe（16进制）特殊的一个标志。
+
 ##JVM运行时数据区
 
 ![](JVMrunningDataArea.JPG)
