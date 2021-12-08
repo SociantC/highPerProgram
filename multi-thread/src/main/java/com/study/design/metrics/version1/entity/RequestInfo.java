@@ -11,6 +11,12 @@ public class RequestInfo {
     private double responseTime;
     private long timeStamp;
 
+    public RequestInfo(String apiName, double responseTime, long timeStamp) {
+        this.apiName = apiName;
+        this.responseTime = responseTime;
+        this.timeStamp = timeStamp;
+    }
+
     public String getApiName() {
         return apiName;
     }
