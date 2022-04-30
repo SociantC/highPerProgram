@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>123</title>
+</head>
+<script type="text/javascript" src="chapature1/playInvo.js"></script>
+<body>
+<label id="result"></label>
+<script type="text/javascript">
+    let plays = {
+        "hamlet": {
+            "name": "Hamlet",
+            "type": "tragedy"
+        },
+        "as-like": {
+            "name": "As You like it",
+            "type": "comedy"
+        },
+        "othello": {
+            "name": "Othello",
+            "type": "tragedy"
+        }
+    };
+    let invoices = {
+        "customer": "BigCo",
+        "performance": [
+            {
+                "playId": "hamlet",
+                "audience": 55
+            },
+            {
+                "playId": "as-like",
+                "audience": 35
+            },{
+                "playId": "othello",
+                "audience": 40
+            }
+        ]
+    };
+    let sta = statement(invoices,plays);
+    document.getElementById("result").innerText = sta;
+    console.log(sta);
+</script>
+</body>
+</html>
