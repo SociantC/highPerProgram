@@ -30,7 +30,7 @@ public class Controller1 {
         return null;
     }
 
-    @RequestMapping("/test4.yml")
+    @RequestMapping("/test4")
 //    @ResponseBody
     @Yml
     public User test4() {

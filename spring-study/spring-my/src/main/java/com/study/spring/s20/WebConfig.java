@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -55,8 +56,10 @@ public class WebConfig {
 
         ArrayList<HandlerMethodArgumentResolver> list = new ArrayList<>();
         list.add(tokenArgumentResolver);
-//        list.add(ymlReturnValueHandler);
         handlerAdapter.setCustomArgumentResolvers(list);
+        ArrayList<HandlerMethodReturnValueHandler> returnValueHandlers = new ArrayList<>();
+        returnValueHandlers.add(ymlReturnValueHandler);
+        handlerAdapter.setCustomReturnValueHandlers(returnValueHandlers);
         return handlerAdapter;
     }
 

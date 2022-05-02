@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -40,15 +41,19 @@ public class S20 {
         }
 
         // 返回处理器执行链对象
-        MockHttpServletRequest request = new MockHttpServletRequest("PUT", "/test3");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/test4");
         request.setParameter("name","张三");
-        request.addHeader("token","令牌");
+        request.addHeader("token","1令牌");
         MockHttpServletResponse response = new MockHttpServletResponse();
         HandlerExecutionChain chain = handlerMapping
                 .getHandler(request);
         System.out.println(">>>>>>>>>>>>>");
         MyRequestMappingHandlerAdapter adapter = context.getBean(MyRequestMappingHandlerAdapter.class);
         adapter.invokeHandlerMethod(request, response, (HandlerMethod) chain.getHandler());
+
+        // 检查响应
+        byte[] content = response.getContentAsByteArray();
+        System.out.println(new String(content, StandardCharsets.UTF_8));
 
         /*System.out.println(">>>>>>>>>>>>>");
         List<HandlerMethodArgumentResolver> resolvers = adapter.getArgumentResolvers();

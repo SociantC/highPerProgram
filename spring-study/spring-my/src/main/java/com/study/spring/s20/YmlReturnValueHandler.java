@@ -35,12 +35,11 @@ public class YmlReturnValueHandler implements HandlerMethodReturnValueHandler {
         // 转换返回结果为yml
         String str = new Yaml().dump(returnValue);
         // 写入响应
-        HttpServletResponse response = webRequest.getNativeRequest(HttpServletResponse.class);
+        HttpServletResponse response = webRequest.getNativeResponse(HttpServletResponse.class);
         response.setContentType("text/plain;charset=utf-8");
         response.getWriter().print(str);
 
-        // 设置请求处理完毕
-        mavContainer.setRequestHandled(true);
+
 
     }
 }
