@@ -208,3 +208,82 @@ public static void main(String[] args) throws Exception {
 
 
 ## 自定义参数和返回值处理器
+
+
+
+
+
+# 参数解析器
+
+@RequestParam 
+
+url param/form-data
+
+@RequestParam 类型转换
+
+@RequestParam(name="",defaultValue="${JAVA_HOME}")	// 从spring中获取数据
+
+@RequestParam MultipartFile file 文件
+
+@PathVariable	/test/{id}
+
+@RequestHeader("Content-Type")
+
+@CookieValue
+
+@Value("${JAVA_HOME}") String home,// 从spring中获取数据
+
+特殊类型的参数：HTTPServletRequest request
+
+@ModelAttribute User user1 //name=zhangsan&age=18
+
+User user1
+
+@RequestBody User user3	// 从请求体中获取数据 json
+
+
+
+
+
+javac 手动编译 
+
+`javac -parameter` MethodParameters 可通过反射获取，接口和不同类都可以
+
+`javac -g`  LocalVariableTable 通过ASM获取，接口无效，普通类可以
+
+javap 反编译
+
+javap -c -v
+
+
+
+spring boot 在编译时会加 -parameters
+
+大部分IDE编译时会加 -g
+
+```java
+// 反射获取参数名
+Method foo = Bean2.class.getMethod("foo",String,class,in.class);
+foo.getParameters();
+// 
+```
+
+# 对象绑定和类型转换
+
+- **两套底层转换接口，一套高层转换接口**
+
+![image-20220503155227327](https://cc-shine.oss-cn-hangzhou.aliyuncs.com/image-20220503155227327.png)
+
+* Printer 把其它类型转为 String
+* Parser 把 String 转为其它类型
+* Formatter 综合  Printer 与 Parser 功能
+* Converter 把类型 S 转为类型 T
+* Printer、Parser、Converter 经过适配转换成 GenericConverter 放入 Converters 集合
+* FormattingConversionService 利用其它们实现转换
+
+
+
+- **数据绑定**
+- **类型转换扩展与绑定器工厂**
+- **@DateTimeFormat 注解解析**
+- **spring提供的泛型操作技巧**

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.DispatcherServlet;
@@ -57,6 +58,7 @@ public class WebConfig {
         ArrayList<HandlerMethodArgumentResolver> list = new ArrayList<>();
         list.add(tokenArgumentResolver);
         handlerAdapter.setCustomArgumentResolvers(list);
+//        HandlerMethod
         ArrayList<HandlerMethodReturnValueHandler> returnValueHandlers = new ArrayList<>();
         returnValueHandlers.add(ymlReturnValueHandler);
         handlerAdapter.setCustomReturnValueHandlers(returnValueHandlers);

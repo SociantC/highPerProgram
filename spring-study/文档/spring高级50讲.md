@@ -1481,8 +1481,8 @@ TypeConverterDelegate --> PropertyEditorRegistry
   * 再利用默认的 PropertyEditor 转换
   * 最后有一些特殊处理
 * SimpleTypeConverter 仅做类型转换
-* BeanWrapperImpl 为 bean 的属性赋值，当需要时做类型转换，走 Property
-* DirectFieldAccessor 为 bean 的属性赋值，当需要时做类型转换，走 Field
+* BeanWrapperImpl 为 bean 的属性赋值，当需要时做类型转换，走 Property，set
+* DirectFieldAccessor 为 bean 的属性赋值，当需要时做类型转换，走 Field，不走set
 * ServletRequestDataBinder 为 bean 的属性执行绑定，当需要时做类型转换，根据 directFieldAccess 选择走 Property 还是 Field，具备校验与获取校验结果功能
 
 
@@ -1526,6 +1526,13 @@ ServletRequestDataBinderFactory 的用法和扩展点
 
 
 
+使用默认的 ConversionService
+
+ApplicationConversionService(SpringBoot) DefaultFormattingConversionService(非SpringBoot)
+
+**DateTimeFormat注解由默认的ConversionService进行解析**
+
+
 #### 演示3 - 获取泛型参数
 
 ##### 代码参考
@@ -1535,11 +1542,24 @@ ServletRequestDataBinderFactory 的用法和扩展点
 #### 收获💡
 
 1. java api 获取泛型参数
+   1. getGenericSuperClass() 获取到带有泛型信息的父类
+
 2. spring api 获取泛型参数
+   1. GenericTypeResolver.resolveTypeArgument
+
 
 
 
 ### 24) @ControllerAdvice 之 @InitBinder
+
+@ExceptionHandler 处理异常
+
+@ModelAttribute 作为模型数据补充到控制器的执行过程中
+
+@InitBinder 补充自定义类型转换器
+
+- 在controllerAdvice中是对所有的控制器生效，由 RequestMappingHandlerAdapter 在初始化解析并记录
+- 如在具体控制器内部，只针对该控制器，由 RequestMappingHandlerAdpter 在控制器方法首次执行时解析并记录
 
 #### 演示 - 准备 @InitBinder
 
@@ -1936,6 +1956,17 @@ public ViewResolver viewResolver() {
 
 1. Spring Boot 中 BasicErrorController 如何工作
 
+返回json格式的不用特殊处理
+
+返回MVC的需要准备两个组件
+
+```java
+// 视图对象
+View
+// 视图解析器对象
+ViewResolver
+```
+
 
 
 ### 33) BeanNameUrlHandlerMapping 与 SimpleControllerHandlerAdapter
@@ -1968,14 +1999,20 @@ public Controller controller3() {
 
 1. BeanNameUrlHandlerMapping，以 / 开头的 bean 的名字会被当作映射路径
 2. 这些 bean 本身当作 handler，要求实现 Controller 接口
-3. SimpleControllerHandlerAdapter，调用 handler
+3. SimpleControllerHandlerAdapter，调用 handler。（implements Controller 调用 handleRequest 方法）
 4. 模拟实现这组映射器和适配器
 
 
 
-### 34) RouterFunctionMapping 与 HandlerFunctionAdapter
+### 34) RouterFunctionMapping 与 HandlerFunctionAdapter （spring5.2+）
 
-#### 演示 - 本组映射器和适配器
+> 1. RouterFunctionMapping 收集所有RouteFunction。包括两部分：
+>    1. RequestPredicate 设置映射条件
+>    2. HandlerFunction 包含处理逻辑
+> 2. 请求到达，根据映射条件找到 HandlerFunction，即Handler
+> 3. HandlerFunctionAdapter, 调用 handler
+
+#### 演示 - 本组映射器和适配器 
 
 ##### 关键代码
 
@@ -1999,13 +2036,28 @@ public RouterFunction<ServerResponse> r1() {
 
 #### 收获💡
 
+函数式控制器
+
 1. RouterFunctionMapping, 通过 RequestPredicate 条件映射
 2. handler 要实现 HandlerFunction 接口
 3. HandlerFunctionAdapter, 调用 handler
 
+对比
+
+1. RequestMappingHandlerMapping 以@RequestMapping最为映射路径
+2. 控制器的具体方法会被当做Handler
+3. RequestMappingHandlerAdapter 调用Handler
+
 
 
 ### 35) SimpleUrlHandlerMapping 与 HttpRequestHandlerAdapter
+
+> 1. 静态资源处理
+>    1. SimpleURLHandlerMapping 做映射
+>    2. ResourceHTTPRequestHandler 作为处理器处理静态资源
+>    3. HTTPRequestHandlerAdapter 调用处理器
+> 2. 欢迎页处理
+> 3. HandlerMapping、Handler、HandlerAdapter功能
 
 #### 演示1 - 本组映射器和适配器
 
@@ -2033,7 +2085,7 @@ public HttpRequestHandlerAdapter httpRequestHandlerAdapter() {
 @Bean("/**")
 public ResourceHttpRequestHandler handler1() {
     ResourceHttpRequestHandler handler = new ResourceHttpRequestHandler();
-    handler.setLocations(List.of(new ClassPathResource("static/")));
+    handler.setLocations(List.of(new ClassPathResource("static/")));	// 加/表示static为目录 
     return handler;
 }
 
@@ -2116,17 +2168,18 @@ public SimpleControllerHandlerAdapter simpleControllerHandlerAdapter() {
 1. HandlerMapping 负责建立请求与控制器之间的映射关系
    * RequestMappingHandlerMapping (与 @RequestMapping 匹配)
    * WelcomePageHandlerMapping    (/)
-   * BeanNameUrlHandlerMapping    (与 bean 的名字匹配 以 / 开头)
-   * RouterFunctionMapping        (函数式 RequestPredicate, HandlerFunction)
+   * BeanNameUrlHandlerMapping    (与 bean 的名字匹配 bean以 / 开头,一般要实现Controller接口)
+   * RouterFunctionMapping        (函数式 RequestPredicate, 处理逻辑 -> HandlerFunction)
    * SimpleUrlHandlerMapping      (静态资源 通配符 /** /img/**)
    * 之间也会有顺序问题, boot 中默认顺序如上
 2. HandlerAdapter 负责实现对各种各样的 handler 的适配调用
-   * RequestMappingHandlerAdapter 处理：@RequestMapping 方法
+   * RequestMappingHandlerAdapter 处理：@RequestMapping 标注的方法,抽象为handlerMethod,方法调用之前解析参数，方法调用之后处理返回值
      * 参数解析器、返回值处理器体现了组合模式
    * SimpleControllerHandlerAdapter 处理：Controller 接口
    * HandlerFunctionAdapter 处理：HandlerFunction 函数式接口
    * HttpRequestHandlerAdapter 处理：HttpRequestHandler 接口 (静态资源处理)
    * 这也是典型适配器模式体现
+3. ResourceHttpRequestHandler.setResourceResolvers 责任链模式体现
 
 
 
@@ -2158,10 +2211,10 @@ public SimpleControllerHandlerAdapter simpleControllerHandlerAdapter() {
    2. RequestMappingHandlerAdapter 调用 handle 方法，准备数据绑定工厂、模型工厂、ModelAndViewContainer、将 HandlerMethod 完善为 ServletInvocableHandlerMethod
       * @ControllerAdvice 全局增强点1️⃣：补充模型数据
       * @ControllerAdvice 全局增强点2️⃣：补充自定义类型转换器
-      * 使用 HandlerMethodArgumentResolver 准备参数
+      * **使用 HandlerMethodArgumentResolver 准备参数**
         * @ControllerAdvice 全局增强点3️⃣：RequestBody 增强
-      * 调用 ServletInvocableHandlerMethod 
-      * 使用 HandlerMethodReturnValueHandler 处理返回值
+      * **调用 ServletInvocableHandlerMethod** 
+      * **使用 HandlerMethodReturnValueHandler 处理返回值**
         * @ControllerAdvice 全局增强点4️⃣：ResponseBody 增强
       * 根据 ModelAndViewContainer 获取 ModelAndView
         * 如果返回的 ModelAndView 为 null，不走第 4 步视图解析及渲染流程
