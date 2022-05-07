@@ -2500,6 +2500,18 @@ context.addServletContainerInitializer(new ServletContainerInitializer() {
 
 ### 41) Boot 自动配置
 
+spring.factories内部类要使用 `$` 如：com.study.Test -> com.study$Test
+
+@Import(Key.class)
+
+SpringFactoriesLoader.loadFactoryNames(Key.class,classloader)
+
+DeferredImportSelector(推迟解析)
+
+当第三方bean和本项目配置bean冲突时候，使用@ConditionOnMissingBean，缺失bean后，才使用第三方的bean
+
+
+
 #### AopAutoConfiguration
 
 Spring Boot 是利用了自动配置类来简化了 aop 相关配置
