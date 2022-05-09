@@ -2341,33 +2341,17 @@ spring.mvc.view.suffix=.jsp
 
 3. 准备 Environment 添加命令行参数（*）
 
-   ApplicationEnviroment
-
-   寻找配置的优先级顺序：从上到下
-
-   systemProperties
-
-   systemEnvironment
-
 4. ConfigurationPropertySources 处理（*）
 
-   1. 处理特殊的property source,ConfigurationPropertySource.attach
-   2. 发布 application environment 已准备事件2️⃣
+   * 发布 application environment 已准备事件2️⃣
 
 5. 通过 EnvironmentPostProcessorApplicationListener 进行 env 后处理（*）
-   * 加入application.properties的解析
-   * （RandowValuePropertySourceEnvironmentPostProcessor）
-     * random.in
-     * randow.uuid
    * application.properties，由 StandardConfigDataLocationResolver 解析
    * spring.application.json
 
 6. 绑定 spring.main 到 SpringApplication 对象（*）
 
 7. 打印 banner（*）
-
-   1. SpringApplicationBannerPrint print
-   2. NANIFEST.MF SpringBootVersion.getVersion()获取版本
 
 8. 创建容器
 
@@ -2390,119 +2374,6 @@ spring.mvc.view.suffix=.jsp
     * 这其中有异常，发布 application failed 事件7️⃣
 
 > 带 * 的有独立的示例
-
-```java
-public ConfigurableApplicationContext run(String... args) {
-		long startTime = System.nanoTime();
-		DefaultBootstrapContext bootstrapContext = createBootstrapContext();
-		ConfigurableApplicationContext context = null;
-		configureHeadlessProperty();
-    	// 1. 得到 SpringApplicationRunListeners，名字取得不好，实际是事件发布器，读取spring.factories配置
-		SpringApplicationRunListeners listeners = getRunListeners(args);
-    	// 开始启动
-		listeners.starting(bootstrapContext, this.mainApplicationClass);
-		try {
-            // 2. 封装启动 args，选项参数（可通过命令行添加）/非选项参数
-			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
-			ConfigurableEnvironment environment = prepareEnvironment(listeners, bootstrapContext, applicationArguments);
-			configureIgnoreBeanInfo(environment);
-            // 7. 打印 banner
-			Banner printedBanner = printBanner(environment);
-            // 8. 创建容器，选择容器实现
-			context = createApplicationContext();
-			context.setApplicationStartup(this.applicationStartup);
-			prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner);
-            // 11. refresh 容器
-			refreshContext(context);
-			afterRefresh(context, applicationArguments);
-			Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
-			if (this.logStartupInfo) {
-				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), timeTakenToStartup);
-			}
-            // context 准备完成
-			listeners.started(context, timeTakenToStartup);
-            // 执行 runner
-			callRunners(context, applicationArguments);
-		}
-		catch (Throwable ex) {
-			handleRunFailure(context, ex, listeners);
-			throw new IllegalStateException(ex);
-		}
-		try {
-			Duration timeTakenToReady = Duration.ofNanos(System.nanoTime() - startTime);
-			listeners.ready(context, timeTakenToReady);
-		}
-		catch (Throwable ex) {
-			handleRunFailure(context, ex, null);
-			throw new IllegalStateException(ex);
-		}
-		return context;
-	}
-
-private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
-			DefaultBootstrapContext bootstrapContext, ApplicationArguments applicationArguments) {
-		// Create and configure the environment
-    	// 3. 准备 Environment 添加命令行参数（*）
-		ConfigurableEnvironment environment = getOrCreateEnvironment();
-    	// 根据参数信息补充到environment，参数必须是选项参数
-		configureEnvironment(environment, applicationArguments.getSourceArgs());
-    	// 4. ConfigurationPropertySources 处理，不符合命名规范的，统一为-分隔
-		ConfigurationPropertySources.attach(environment);
-    	// 5. 事件监听器通过 EnvironmentPostProcessorApplicationListener 进行 env 后处理，随机数源，application properties源
-		listeners.environmentPrepared(bootstrapContext, environment);
-		DefaultPropertiesPropertySource.moveToEnd(environment);
-		Assert.state(!environment.containsProperty("spring.main.environment-prefix"),
-				"Environment prefix cannot be set via properties.");
-		// 6. 绑定 spring.main 到 SpringApplication 对象
-    	bindToSpringApplication(environment);
-		if (!this.isCustomEnvironment) {
-			environment = convertEnvironment(environment);
-		}
-		ConfigurationPropertySources.attach(environment);
-		return environment;
-	}
-
-private void prepareContext(DefaultBootstrapContext bootstrapContext, ConfigurableApplicationContext context,
-			ConfigurableEnvironment environment, SpringApplicationRunListeners listeners,
-			ApplicationArguments applicationArguments, Banner printedBanner) {
-		context.setEnvironment(environment);
-		postProcessApplicationContext(context);
-    	// 9. 准备容器
-		applyInitializers(context);
-    	// 事件发布
-		listeners.contextPrepared(context);
-		bootstrapContext.close(context);
-		if (this.logStartupInfo) {
-			logStartupInfo(context.getParent() == null);
-			logStartupProfileInfo(context);
-		}
-		// Add boot specific singleton beans
-		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
-		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
-		if (printedBanner != null) {
-			beanFactory.registerSingleton("springBootBanner", printedBanner);
-		}
-		if (beanFactory instanceof AbstractAutowireCapableBeanFactory) {
-			((AbstractAutowireCapableBeanFactory) beanFactory).setAllowCircularReferences(this.allowCircularReferences);
-			if (beanFactory instanceof DefaultListableBeanFactory) {
-				((DefaultListableBeanFactory) beanFactory)
-						.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
-			}
-		}
-		if (this.lazyInitialization) {
-			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
-		}
-		// Load the sources
-		Set<Object> sources = getAllSources();
-		Assert.notEmpty(sources, "Sources must not be empty");
-    	// 10. 加载 bean 定义
-		load(context, sources.toArray(new Object[0]));
-    	// 事件发布
-		listeners.contextLoaded(context);
-	}
-```
-
-
 
 #### 演示 - 启动过程
 
@@ -2551,7 +2422,7 @@ Tomcat 基本结构
 ```
 Server
 └───Service
-    ├───Connector 连接器(协议, 端口)
+    ├───Connector (协议, 端口)
     └───Engine
         └───Host(虚拟主机 localhost)
             ├───Context1 (应用1, 可以设置虚拟路径, / 即 url 起始路径; 项目磁盘路径, 即 docBase )
@@ -2628,10 +2499,6 @@ context.addServletContainerInitializer(new ServletContainerInitializer() {
 
 
 ### 41) Boot 自动配置
-
-@Import导入其他配置类 通过后处理器 ConfigurationClassPostProcessor
-
-importSe lector
 
 #### AopAutoConfiguration
 
